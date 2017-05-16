@@ -6,7 +6,7 @@
       "fk\\express\\": "src"
     }
   },
-  "depends": {
+  "require": {
     "curl/curl": "*"
   }
 }

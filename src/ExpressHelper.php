@@ -27,14 +27,14 @@ class ExpressHelper
             $names[] = $info['comCode'];
         }
         foreach ($names as $name) {
-            $data = $this->_tryQuerying($postSn, $name);
+            $data = $this->tryQuerying($postSn, $name);
             if ($data) break;
         }
 
         return empty($data) ? [] : $data;
     }
 
-    private function _tryQuerying($postSn, $expressName): array
+    protected function tryQuerying($postSn, $expressName): array
     {
         $url = "http://www.kuaidi100.com/query?type=$expressName&postid=$postSn&id=1&valicode=&temp=0.09561791346856974";
 
@@ -42,7 +42,7 @@ class ExpressHelper
         return $response ? json_decode($response, true) : [];
     }
 
-    public function getExpressNamesBySn($sn)
+    protected function getExpressNamesBySn($sn)
     {
         $url = "http://www.kuaidi100.com/autonumber/autoComNum?text=$sn";
         $this->curl->get($url);
@@ -54,7 +54,7 @@ class ExpressHelper
     /**
      * @return static
      */
-    public function instance()
+    public static function instance()
     {
         return new static;
     }
