@@ -12,6 +12,8 @@ use Curl\Curl;
 class ExpressHelper
 {
 
+    const STATUS_SIGNED = 3;
+
     protected $curl;
 
     public function __construct()
@@ -19,24 +21,46 @@ class ExpressHelper
         $this->curl = new Curl();
     }
 
-    public function query($postSn, $expressName = '')
+    public function query($postSn, $expressCompanyCode = '')
     {
         $names = [];
-        if ($expressName) $names = [$expressName];
+        if ($expressCompanyCode) $names = [$expressCompanyCode];
         foreach ($this->getExpressNamesBySn($postSn) as $info) {
             $names[] = $info['comCode'];
         }
-        foreach ($names as $name) {
-            $data = $this->tryQuerying($postSn, $name);
-            if ($data) break;
+        foreach ($names as $code) {
+            $data = $this->tryQuerying($postSn, $code);
+            if ($data) {
+                $data['com_name'] = $this->queryCompanyByCode($code);
+                break;
+            }
         }
 
         return empty($data) ? [] : $data;
     }
 
-    protected function tryQuerying($postSn, $expressName): array
+    public function queryCompanyByCode($code)
     {
-        $url = "http://www.kuaidi100.com/query?type=$expressName&postid=$postSn&id=1&valicode=&temp=0.09561791346856974";
+        $name = Code::getName($code);
+        if ($name === $code) {
+            $url = "https://m.kuaidi100.com/company.do";
+            $data = [
+                'method' => 'companyjs',
+                'number' => $code,
+            ];
+            $a = $this->curl->post($url, $data);
+
+            $response = json_decode($a->response, true);
+            if (!$response) return $code;
+
+            $name = $response['name'];
+        }
+        return $name;
+    }
+
+    protected function tryQuerying($postSn, $expressCompanyCode): array
+    {
+        $url = "http://www.kuaidi100.com/query?type=$expressCompanyCode&postid=$postSn&id=1&valicode=&temp=0.09561791346856974";
 
         $response = $this->curl->get($url)->response;
         return $response ? json_decode($response, true) : [];
